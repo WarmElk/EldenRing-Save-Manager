@@ -257,6 +257,9 @@ def finish_update():
 
 
 def ext():
+    sf_ext = config.cfg.get("save-file-extension", None)
+    if sf_ext:
+        return "ER0000." + sf_ext
     if config.cfg["seamless-coop"]:
         return "ER0000.co2"
     elif config.cfg["seamless-coop"] is False:
@@ -358,7 +361,7 @@ def create_save():
 
     isforbidden = False
     for char in name:
-        if char in "~'{};:./\,:*?<>|-!@#$%^&()+":
+        if char in "~'{};:./\\,:*?<>|-!@#$%^&()+":
             isforbidden = True
     if isforbidden is True:
         popup("Forbidden character used")
@@ -499,7 +502,7 @@ def rename_slot():
             return
         isforbidden = False
         for char in new_name:
-            if char in "~'{};:./\,:*?<>|-!@#$%^&()+":
+            if char in "~'{};:./\\,:*?<>|-!@#$%^&()+":
                 isforbidden = True
         if isforbidden is True:
             popup("Forbidden character used")
@@ -2289,7 +2292,6 @@ def set_starting_class_menu():
     but_set.config(font=bolded)
     but_set.grid(row=4, column=0, padx=(15, 0), pady=(20, 0))
 
-
 def change_default_steamid_menu():
 
 
@@ -2334,6 +2336,48 @@ def change_default_steamid_menu():
     but_cancel = Button(popupwin, text="Cancel", borderwidth=5, width=6, command=cancel)
     but_cancel.grid(row=2, column=0, padx=(70, 0), pady=(0, 15))
 
+def change_save_file_extension_menu():
+    def done():
+        sf_ext = ent.get().strip(". ")
+        if(len(sf_ext) == 0):
+            clear()
+        else:
+            config.set("save-file-extension", sf_ext)
+            popup(f"Successfully changed save file to: {ext()}")
+        popupwin.destroy()
+
+    def clear():
+        config.set("save-file-extension", None)
+        popup(f"Save file extension override cleared.\nSave file will be: {ext()}")
+        popupwin.destroy()
+
+    def cancel():
+        popupwin.destroy()
+
+    def validate(P):
+        return True
+
+    popupwin = Toplevel(root)
+    popupwin.title("Change Save File Extension")
+    vcmd = (popupwin.register(validate), "%P")
+    sf_ext = config.cfg.get("save-file-extension", None)
+    lab = Label(popupwin, text=f"It is recommended to use a separate copy of the\nSave Manager for each alt saves extension that you use.\n\nSetting this value will override seamless co-op mode.\n\nEnter extension (e.g. mod or mod.co2):")
+    lab.grid(row=0, column=0)
+    ent = Entry(popupwin, borderwidth=5, validate="key", validatecommand=vcmd)
+    ent.grid(row=1, column=0, padx=25, pady=10)
+    if sf_ext:
+       ent.delete(0, END)
+       ent.insert(0, sf_ext)
+    x = root.winfo_x()
+    y = root.winfo_y()
+    popupwin.geometry("+%d+%d" % (x + 200, y + 100))
+    but_done = Button(popupwin, text="Done", borderwidth=5, width=6, command=done)
+    but_done.grid(row=2, column=0, padx=(25, 65), pady=(0, 15), sticky="w")
+    but_clear = Button(popupwin, text="Clear", borderwidth=5, width=6, command=clear)
+    but_clear.grid(row=2, column=0, padx=(12, 0), pady=(0, 15))
+    but_cancel = Button(popupwin, text="Cancel", borderwidth=5, width=6, command=cancel)
+    but_cancel.grid(row=2, column=0, padx=(240, 0), pady=(0, 15))
+
 
 def import_save_menu(directory=False):
     """Opens file explorer to choose a save file to import, Then checks if the files steam ID matches users, and replaces it with users id"""
@@ -2349,7 +2393,7 @@ def import_save_menu(directory=False):
         return
 
     if not d.endswith(ext()):
-        popup("Select a valid save file!\nIt should be named: ER0000.sl2 or ER0000.co2 if seamless co-op is enabled.")
+        popup(f"Select a valid save file!\nWith the current configuration, it should be named: {ext()}")
         return
 
 
@@ -2366,7 +2410,7 @@ def import_save_menu(directory=False):
             return
         isforbidden = False
         for char in name:
-            if char in "~'{};:./\,:*?<>|-!@#$%^&()+":
+            if char in "~'{};:./\\,:*?<>|-!@#$%^&()+":
                 isforbidden = True
         if isforbidden is True:
             popup("Forbidden character used")
@@ -2918,6 +2962,7 @@ filemenu = Menu(menubar, tearoff=0)
 #filemenu.add_command(label="Save Backup", command=save_backup)
 #filemenu.add_command(label="Restore Backup", command=load_backup)
 filemenu.add_command(label="Import Save File", command=import_save_menu)
+filemenu.add_command(label="Change Save File Extension (for alt saves)", command=change_save_file_extension_menu)
 filemenu.add_command(label="seamless Co-op Mode", command=seamless_coop_menu)
 filemenu.add_command(label="Force quit EldenRing", command=forcequit)
 filemenu.add_command(label="Open Default Game Save Directory", command=open_game_save_dir)

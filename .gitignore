@@ -3,3 +3,6 @@ data/archive/
 data/config.json
 data/post.update
 data/save-files/
+build/
+dist/
+SaveManager.spec
